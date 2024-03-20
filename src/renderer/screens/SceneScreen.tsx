@@ -261,8 +261,8 @@ export default function SceneScreen() {
             <CanvasView
                 scene={scene}
                 selectNodeIds={selectNodeIds}
-                onSceneUpdate={updateScene}
-                onSelectNodeIdsUpdate={setSelectNodeIds}
+                updateScene={updateScene}
+                setSelectNodeIds={setSelectNodeIds}
             />
             {showInfo && scene ? (
                 <div className="absolute top-[40px] left-[10px] bg-background/80 px-3 py-1 rounded-md backdrop-blur-md">

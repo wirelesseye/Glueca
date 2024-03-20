@@ -7,19 +7,11 @@ import { nanoid } from "nanoid";
 export default class CanvasController {
     private ctx: CanvasRenderingContext2D | null = null;
     private selectNodeIds: Set<string> = new Set();
-    private updateScene: () => void;
-    private setSelectNodeIds: (selectNodeIds: Set<string>) => void;
+    private updateScene: (() => void) = () => {};
+    private setSelectNodeIds: ((selectNodeIds: Set<string>) => void) = () => {};
     private isMovingObject = false;
 
     private scene: SceneState | null = null;
-
-    constructor(
-        onSceneUpdate: () => void,
-        onSelectNodeIdsUpdate: (selectNodeIds: Set<string>) => void,
-    ) {
-        this.updateScene = onSceneUpdate;
-        this.setSelectNodeIds = onSelectNodeIdsUpdate;
-    }
 
     setCtx(ctx: CanvasRenderingContext2D) {
         this.ctx = ctx;
@@ -34,6 +26,14 @@ export default class CanvasController {
 
     updateSelectNodeIds(selectNodeIds: Set<string>) {
         this.selectNodeIds = selectNodeIds;
+    }
+
+    onSceneUpdate(handler: () => void) {
+        this.updateScene = handler;
+    }
+
+    onSelectNodeIdsUpdate(handler: (selectNodeIds: Set<string>) => void) {
+        this.setSelectNodeIds = handler;
     }
 
     setScene(scene: SceneState | null) {

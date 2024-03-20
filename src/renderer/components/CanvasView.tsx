@@ -5,18 +5,25 @@ import { useCallback, useEffect, useRef } from "react";
 interface CanvasViewProps {
     scene: SceneState | null;
     selectNodeIds: Set<string>;
-    onSelectNodeIdsUpdate: (selectNodeIds: Set<string>) => void;
-    onSceneUpdate: () => void;
+    setSelectNodeIds: (selectNodeIds: Set<string>) => void;
+    updateScene: () => void;
 }
 
-export default function CanvasView({ scene, selectNodeIds, onSelectNodeIdsUpdate, onSceneUpdate }: CanvasViewProps) {
-    const controller = useRef(new CanvasController(onSceneUpdate, onSelectNodeIdsUpdate));
+export default function CanvasView({
+    scene,
+    selectNodeIds,
+    setSelectNodeIds,
+    updateScene,
+}: CanvasViewProps) {
+    const controller = useRef(new CanvasController());
 
     const onCanvasRefUpdate = useCallback((ref: HTMLCanvasElement) => {
         if (ref) {
             const ctx = ref.getContext("2d");
             if (ctx) {
                 controller.current.setCtx(ctx);
+                controller.current.onSceneUpdate(updateScene);
+                controller.current.onSelectNodeIdsUpdate(setSelectNodeIds);
             }
         }
     }, []);
