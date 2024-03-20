@@ -13,7 +13,7 @@ import process from "process";
 import path from "path";
 import fs from "fs";
 import { generateFileName } from "./utils";
-import { SceneState } from "src/scene";
+import { Scene } from "src/scene";
 
 const __dirname = app.isPackaged
     ? path.join(process.resourcesPath, `app.asar/dist`)
@@ -135,7 +135,7 @@ function registerIPCHandlers() {
         }
         const fileName = generateFileName(folderPath);
         const filePath = path.join(folderPath, fileName);
-        const fileData = await SceneState.default().serialize();
+        const fileData = await Scene.default().serialize();
         fs.writeFileSync(filePath, fileData);
         openSceneByPaths([filePath], event.sender);
     });

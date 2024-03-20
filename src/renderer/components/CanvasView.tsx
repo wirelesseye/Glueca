@@ -1,9 +1,9 @@
 import CanvasController from "@/lib/CanvasController";
-import { SceneState } from "src/scene";
+import { Scene } from "src/scene";
 import { useCallback, useEffect, useRef } from "react";
 
 interface CanvasViewProps {
-    scene: SceneState | null;
+    scene: Scene | null;
     selectNodeIds: Set<string>;
     setSelectNodeIds: (selectNodeIds: Set<string>) => void;
     updateScene: () => void;

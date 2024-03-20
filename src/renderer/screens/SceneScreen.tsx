@@ -19,7 +19,7 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Dim } from "src/coordinate";
-import { SceneState } from "src/scene";
+import { Scene } from "src/scene";
 import { useDarkTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import {
@@ -38,7 +38,7 @@ export default function SceneScreen() {
     const dark = useDarkTheme();
 
     const [filePath, setFilePath] = useState("");
-    const [scenes, setScenes] = useState<Record<string, SceneState | null>>({});
+    const [scenes, setScenes] = useState<Record<string, Scene | null>>({});
     const [isLoading, setIsLoading] = useState(false);
 
     const fileInput = useRef<HTMLInputElement>(null);
@@ -52,7 +52,7 @@ export default function SceneScreen() {
         if (filePath && scenes[filePath] === null && !isLoading) {
             setIsLoading(true);
             window.electronAPI.readFile(filePath).then((data) => {
-                const scene = SceneState.deserialize(data);
+                const scene = Scene.deserialize(data);
                 console.log(scene);
                 setScenes((scenes) => ({
                     ...scenes,
@@ -73,7 +73,7 @@ export default function SceneScreen() {
         });
     }, []);
 
-    const scene: SceneState | null = scenes[filePath] ?? null;
+    const scene: Scene | null = scenes[filePath] ?? null;
 
     const newScene = () => {
         window.electronAPI.newScene();

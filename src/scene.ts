@@ -4,7 +4,7 @@ import DataBuffer from "./databuffer";
 import RBush from "rbush";
 import { GluGroup, GluNode, GluObject } from "./glunode";
 
-export class SceneState {
+export class Scene {
     viewPos: Pos;
     zoom: number;
     private root: GluGroup;
@@ -38,7 +38,7 @@ export class SceneState {
         const zoom = 1;
         const nodeById = {};
         const rTree = new RBush<GluNode>();
-        const scene = new SceneState(viewPos, zoom, root, nodeById, rTree);
+        const scene = new Scene(viewPos, zoom, root, nodeById, rTree);
         scene.registerNode(root);
         return scene;
     }
@@ -53,7 +53,7 @@ export class SceneState {
         return dataBuffer.toUint8Array();
     }
 
-    static deserialize(uint8Array: Uint8Array): SceneState {
+    static deserialize(uint8Array: Uint8Array): Scene {
         const dataBuffer = DataBuffer.fromUint8Array(uint8Array);
         const validate = dataBuffer.getString(false, 6);
         if (validate !== "GLUECA") {
@@ -64,7 +64,7 @@ export class SceneState {
         const zoom = dataBuffer.getF32();
         const root = GluGroup.readFromDataBuffer(dataBuffer);
         root.setParent(null);
-        const scene = new SceneState(
+        const scene = new Scene(
             viewPos,
             zoom,
             root,

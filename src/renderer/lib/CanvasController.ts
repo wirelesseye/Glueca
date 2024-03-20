@@ -1,4 +1,4 @@
-import { SceneState } from "src/scene";
+import { Scene } from "src/scene";
 import { limit } from "./utils";
 import { Dim, Pos } from "src/coordinate";
 import { GluObject } from "src/glunode";
@@ -11,7 +11,7 @@ export default class CanvasController {
     private setSelectNodeIds: ((selectNodeIds: Set<string>) => void) = () => {};
     private isMovingObject = false;
 
-    private scene: SceneState | null = null;
+    private scene: Scene | null = null;
 
     setCtx(ctx: CanvasRenderingContext2D) {
         this.ctx = ctx;
@@ -36,7 +36,7 @@ export default class CanvasController {
         this.setSelectNodeIds = handler;
     }
 
-    setScene(scene: SceneState | null) {
+    setScene(scene: Scene | null) {
         this.scene = scene;
     }
 

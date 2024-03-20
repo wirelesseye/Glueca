@@ -1,9 +1,9 @@
 import { Dim, Pos } from "./coordinate";
 import DataBuffer from "./databuffer";
-import { SceneState } from "./scene";
+import { Scene } from "./scene";
 
 export abstract class GluNode {
-    private scene: SceneState | null = null;
+    private scene: Scene | null = null;
     private parent: GluGroup | null | undefined = undefined;
 
     constructor(
@@ -18,7 +18,7 @@ export abstract class GluNode {
         return this.scene;
     }
 
-    setScene(scene: SceneState | null) {
+    setScene(scene: Scene | null) {
         this.scene = scene;
     }
 
