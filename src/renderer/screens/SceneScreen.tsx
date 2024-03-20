@@ -18,7 +18,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Dim, Pos } from "src/coordinate";
+import { Dim } from "src/coordinate";
 import { SceneState } from "src/scene";
 import { useDarkTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
@@ -120,7 +120,7 @@ export default function SceneScreen() {
                             "image",
                             nanoid(),
                             file.name,
-                            new Pos(scene.viewPos.x, scene.viewPos.y),
+                            scene.viewPos.clone(),
                             new Dim(0, 0),
                             file,
                         ),

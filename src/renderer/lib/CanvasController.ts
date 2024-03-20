@@ -1,6 +1,8 @@
 import { SceneState } from "src/scene";
 import { limit } from "./utils";
-import { Pos } from "src/coordinate";
+import { Dim, Pos } from "src/coordinate";
+import { GluObject } from "src/glunode";
+import { nanoid } from "nanoid";
 
 export default class CanvasController {
     private ctx: CanvasRenderingContext2D | null = null;
@@ -26,6 +28,7 @@ export default class CanvasController {
         this.ctx.canvas.onwheel = this.onWheel.bind(this);
         this.resize();
         window.requestAnimationFrame(this.render.bind(this));
+        window.addEventListener("paste", this.onPaste.bind(this));
         window.addEventListener("resize", this.resize.bind(this));
     }
 
@@ -183,8 +186,8 @@ export default class CanvasController {
             );
         } else {
             this.scene.viewPos = new Pos(
-                this.scene.viewPos.x - e.movementX * dpr / this.scene.zoom,
-                this.scene.viewPos.y - e.movementY * dpr / this.scene.zoom,
+                this.scene.viewPos.x - (e.movementX * dpr) / this.scene.zoom,
+                this.scene.viewPos.y - (e.movementY * dpr) / this.scene.zoom,
             );
         }
 
@@ -201,6 +204,32 @@ export default class CanvasController {
                 (e.movementX * dpr) / this.scene.zoom,
                 (e.movementY * dpr) / this.scene.zoom,
             );
+        }
+    }
+
+    private onPaste(e: ClipboardEvent) {
+        if (!this.scene || !e.clipboardData) return;
+
+        const items = e.clipboardData.items;
+        for (const item of items) {
+            if (item.kind === "file") {
+                const blob = item.getAsFile();
+                if (blob) {
+                    this.scene
+                        .getRoot()
+                        .addNode(
+                            new GluObject(
+                                "image",
+                                nanoid(),
+                                "Image",
+                                this.scene.viewPos.clone(),
+                                new Dim(0, 0),
+                                blob,
+                            ),
+                        );
+                    this.updateScene();
+                }
+            }
         }
     }
 

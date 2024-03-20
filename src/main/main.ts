@@ -222,6 +222,11 @@ menuTemplate.push({
 });
 
 menuTemplate.push({
+    label: "Edit",
+    role: "editMenu",
+});
+
+menuTemplate.push({
     label: "Object",
     submenu: [
         {

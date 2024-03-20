@@ -20,6 +20,10 @@ export class Pos {
     offset(x: number, y: number) {
         return new Pos(this.x + x, this.y + y);
     }
+
+    clone() {
+        return new Pos(this.x, this.y);
+    }
 }
 
 export class Dim {
