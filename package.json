@@ -1,0 +1,78 @@
+{
+    "name": "glueca",
+    "version": "1.0.0",
+    "type": "module",
+    "main": "dist/main.js",
+    "private": true,
+    "scripts": {
+        "dev": "concurrently -k pnpm:dev:renderer pnpm:dev:main",
+        "dev:main": "webpack --env dev --config webpack.config.main.js",
+        "dev:renderer": "webpack serve",
+        "build": "pnpm run build:renderer && pnpm run build:main",
+        "build:main": "webpack --config webpack.config.main.js",
+        "build:renderer": "webpack",
+        "lint": "eslint --ext .ts,.tsx .",
+        "make": "electron-builder --dir",
+        "package": "electron-builder"
+    },
+    "keywords": [],
+    "author": "wirelessEye",
+    "license": "MIT",
+    "devDependencies": {
+        "@swc/core": "^1.4.8",
+        "@types/rbush": "^3.0.3",
+        "@types/react": "^18.2.66",
+        "@types/react-dom": "^18.2.22",
+        "@typescript-eslint/eslint-plugin": "^7.2.0",
+        "@typescript-eslint/parser": "^7.2.0",
+        "autoprefixer": "^10.4.18",
+        "concurrently": "^8.2.2",
+        "css-loader": "^6.10.0",
+        "electron": "^29.1.4",
+        "electron-builder": "^24.13.3",
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-import-resolver-typescript": "^3.6.1",
+        "eslint-plugin-import": "^2.29.1",
+        "html-webpack-plugin": "^5.6.0",
+        "postcss": "^8.4.36",
+        "postcss-loader": "^8.1.1",
+        "prettier": "^3.2.5",
+        "style-loader": "^3.3.4",
+        "swc-loader": "^0.2.6",
+        "tailwindcss": "^3.4.1",
+        "typescript": "^5.4.2",
+        "webpack": "^5.90.3",
+        "webpack-cli": "^5.1.4",
+        "webpack-dev-server": "^5.0.3"
+    },
+    "dependencies": {
+        "@emotion/react": "^11.11.4",
+        "@radix-ui/react-checkbox": "^1.0.4",
+        "@radix-ui/react-dropdown-menu": "^2.0.6",
+        "@radix-ui/react-slot": "^1.0.2",
+        "@radix-ui/react-tabs": "^1.0.4",
+        "@radix-ui/react-tooltip": "^1.0.7",
+        "@tanstack/react-router": "^1.19.4",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.1.0",
+        "lucide-react": "^0.358.0",
+        "nanoid": "^5.0.6",
+        "rbush": "^3.0.1",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "tailwind-merge": "^2.2.2",
+        "tailwindcss-animate": "^1.0.7"
+    },
+    "build": {
+        "files": [
+            "./dist/**/*"
+        ],
+        "appId": "io.github.wirelesseye.glueca",
+        "productName": "Glueca",
+        "directories": {
+            "output": "make"
+        }
+    },
+    "packageManager": "pnpm@8.15.4+sha256.cea6d0bdf2de3a0549582da3983c70c92ffc577ff4410cbf190817ddc35137c2"
+}

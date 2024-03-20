@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/renderer/*"],
+            "src/*": ["./src/*"]
+        },
+        "strict": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Node",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "outDir": "./dist",
+        "jsx": "react-jsx"
+    }
+}
