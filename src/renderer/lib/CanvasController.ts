@@ -1,14 +1,16 @@
 import { Scene } from "src/scene";
 import { limit } from "./utils";
 import { Dim, Pos } from "src/coordinate";
-import { GluObject } from "src/glunode";
+import { GluNode, GluObject } from "src/glunode";
 import { nanoid } from "nanoid";
 
 export default class CanvasController {
     private ctx: CanvasRenderingContext2D | null = null;
-    private selectNodeIds: Set<string> = new Set();
+
+    private selectNodes: Set<GluNode> = new Set();
+    private setSelectNodes: ((selectNodes: Set<GluNode>) => void) = () => {};
     private updateScene: (() => void) = () => {};
-    private setSelectNodeIds: ((selectNodeIds: Set<string>) => void) = () => {};
+
     private isMovingObject = false;
 
     private scene: Scene | null = null;
@@ -24,16 +26,16 @@ export default class CanvasController {
         window.addEventListener("resize", this.resize.bind(this));
     }
 
-    updateSelectNodeIds(selectNodeIds: Set<string>) {
-        this.selectNodeIds = selectNodeIds;
+    updateSelectNodes(selectNodes: Set<GluNode>) {
+        this.selectNodes = selectNodes;
     }
 
     onSceneUpdate(handler: () => void) {
         this.updateScene = handler;
     }
 
-    onSelectNodeIdsUpdate(handler: (selectNodeIds: Set<string>) => void) {
-        this.setSelectNodeIds = handler;
+    onSelectNodesUpdate(handler: (selectNodes: Set<GluNode>) => void) {
+        this.setSelectNodes = handler;
     }
 
     setScene(scene: Scene | null) {
@@ -61,7 +63,7 @@ export default class CanvasController {
             -0.5 * this.ctx.canvas.height * (this.scene.zoom - 1),
         );
 
-        const nodes = this.scene.rTree.search({
+        const objects = this.scene.rTree.search({
             minX: this.scene.viewPos.x - canvas.width / 2 / this.scene.zoom,
             minY: this.scene.viewPos.y - canvas.height / 2 / this.scene.zoom,
             maxX: this.scene.viewPos.x + canvas.width / 2 / this.scene.zoom,
@@ -69,22 +71,21 @@ export default class CanvasController {
         });
 
         if (this.isMovingObject) {
-            for (const nodeId of this.selectNodeIds) {
-                const node = this.scene.getNode(nodeId);
-                nodes.push(node);
+            for (const node of this.selectNodes) {
+                if (node instanceof GluObject) {
+                    objects.push(node);
+                }
             }
         }
 
-        nodes.sort((a, b) => a.depth() - b.depth());
+        objects.sort((a, b) => a.depth() - b.depth());
 
-        for (const node of nodes) {
+        for (const node of objects) {
             node.render(this.ctx, this.scene.viewPos);
         }
 
         const dpr = window.devicePixelRatio;
-        for (const nodeId of this.selectNodeIds) {
-            const node = this.scene.getNode(nodeId);
-
+        for (const node of this.selectNodes) {
             const x =
                 this.ctx.canvas.width / 2 - this.scene.viewPos.x + node.pos.x;
             const y =
@@ -127,40 +128,41 @@ export default class CanvasController {
                 this.scene.viewPos.y +
                 (e.offsetY * dpr - this.ctx!.canvas.height / 2) /
                     this.scene.zoom;
-            const nodes = this.scene.rTree.search({
+            const objects = this.scene.rTree.search({
                 minX: x,
                 minY: y,
                 maxX: x,
                 maxY: y,
             });
-            nodes.sort((a, b) => a.depth() - b.depth());
-            if (nodes.length > 0) {
-                const topNode = nodes[nodes.length - 1];
+            objects.sort((a, b) => a.depth() - b.depth());
+            if (objects.length > 0) {
+                const topNode = objects[objects.length - 1];
                 if (e.shiftKey) {
-                    const newSelectNodeIds = new Set(this.selectNodeIds);
-                    if (this.selectNodeIds.has(topNode.id)) {
-                        newSelectNodeIds.delete(topNode.id);
+                    const newSelectNodes = new Set(this.selectNodes);
+                    if (this.selectNodes.has(topNode)) {
+                        newSelectNodes.delete(topNode);
                     } else {
-                        newSelectNodeIds.add(topNode.id);
+                        newSelectNodes.add(topNode);
                     }
-                    this.setSelectNodeIds(newSelectNodeIds);
+                    this.setSelectNodes(newSelectNodes);
                 } else {
-                    if (!this.selectNodeIds.has(topNode.id)) {
+                    if (!this.selectNodes.has(topNode)) {
                         // Update value instantly
-                        this.selectNodeIds = new Set([topNode.id]);
-                        this.setSelectNodeIds(this.selectNodeIds);
+                        this.selectNodes = new Set([topNode]);
+                        this.setSelectNodes(this.selectNodes);
                     }
 
-                    for (const nodeId of this.selectNodeIds) {
-                        const node = this.scene.getNode(nodeId);
-                        this.scene.rTree.remove(node);
+                    for (const node of this.selectNodes) {
+                        if (node instanceof GluObject) {
+                            this.scene.rTree.remove(node);
+                        }
                     }
                     this.isMovingObject = true;
                     this.ctx!.canvas.onpointermove = this.moveObject.bind(this);
                 }
             } else {
-                if (this.selectNodeIds.size > 0) {
-                    this.setSelectNodeIds(new Set());
+                if (this.selectNodes.size > 0) {
+                    this.setSelectNodes(new Set());
                 }
             }
         } else if (e.button === 1) {
@@ -198,8 +200,7 @@ export default class CanvasController {
         if (!this.scene) return;
 
         const dpr = window.devicePixelRatio;
-        for (const nodeId of this.selectNodeIds) {
-            const node = this.scene.getNode(nodeId);
+        for (const node of this.selectNodes) {
             node.pos = node.pos.offset(
                 (e.movementX * dpr) / this.scene.zoom,
                 (e.movementY * dpr) / this.scene.zoom,
@@ -238,9 +239,10 @@ export default class CanvasController {
 
         this.ctx!.canvas.onpointermove = null;
         if (e.button === 0 && this.isMovingObject) {
-            for (const nodeId of this.selectNodeIds) {
-                const node = this.scene.getNode(nodeId);
-                this.scene.rTree.insert(node);
+            for (const node of this.selectNodes) {
+                if (node instanceof GluObject) {
+                    this.scene.rTree.insert(node);
+                }
             }
             this.updateScene();
             this.isMovingObject = false;

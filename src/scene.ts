@@ -9,14 +9,14 @@ export class Scene {
     zoom: number;
     private root: GluGroup;
     private nodeById: Record<string, GluNode>;
-    rTree: RBush<GluNode>;
+    rTree: RBush<GluObject>;
 
     private constructor(
         viewPos: Pos,
         zoom: number,
         root: GluGroup,
         nodeById: Record<string, GluNode>,
-        rTree: RBush<GluNode>,
+        rTree: RBush<GluObject>,
     ) {
         this.root = root;
         this.viewPos = viewPos;
@@ -37,7 +37,7 @@ export class Scene {
         const viewPos = new Pos(0, 0);
         const zoom = 1;
         const nodeById = {};
-        const rTree = new RBush<GluNode>();
+        const rTree = new RBush<GluObject>();
         const scene = new Scene(viewPos, zoom, root, nodeById, rTree);
         scene.registerNode(root);
         return scene;
@@ -69,7 +69,7 @@ export class Scene {
             zoom,
             root,
             {},
-            new RBush<GluNode>(),
+            new RBush<GluObject>(),
         );
         scene.registerNode(root);
         return scene;

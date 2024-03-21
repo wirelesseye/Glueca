@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
-import { GluGroup, GluObject } from "src/glunode";
+import { GluGroup, GluNode, GluObject } from "src/glunode";
 
 export default function SceneScreen() {
     const dark = useDarkTheme();
@@ -45,7 +45,7 @@ export default function SceneScreen() {
     const [showInfo, setShowInfo] = useState(false);
     const [showLayers, setShowLayers] = useState(false);
 
-    const [selectNodeIds, setSelectNodeIds] = useState<Set<string>>(new Set());
+    const [selectNodes, setSelectNodes] = useState<Set<GluNode>>(new Set());
     const setUpdateCounter = useState(0)[1];
 
     useEffect(() => {
@@ -260,9 +260,9 @@ export default function SceneScreen() {
             </CustomTitleBar>
             <CanvasView
                 scene={scene}
-                selectNodeIds={selectNodeIds}
+                selectNodes={selectNodes}
+                setSelectNodes={setSelectNodes}
                 updateScene={updateScene}
-                setSelectNodeIds={setSelectNodeIds}
             />
             {showInfo && scene ? (
                 <div className="absolute top-[40px] left-[10px] bg-background/80 px-3 py-1 rounded-md backdrop-blur-md">
@@ -296,32 +296,29 @@ export default function SceneScreen() {
                                         className={cn(
                                             "flex shrink-0 items-center border-t overflow-hidden bg-background/50 hover:bg-muted/50",
                                             {
-                                                "bg-muted": selectNodeIds.has(
-                                                    child.id,
-                                                ),
+                                                "bg-muted":
+                                                    selectNodes.has(child),
                                             },
                                         )}
                                     >
                                         <Checkbox
                                             className="ml-3"
-                                            checked={selectNodeIds.has(
-                                                child.id,
-                                            )}
+                                            checked={selectNodes.has(child)}
                                             onCheckedChange={(checked) => {
                                                 if (checked) {
-                                                    setSelectNodeIds((set) => {
+                                                    setSelectNodes((set) => {
                                                         const newSet = new Set(
                                                             set,
                                                         );
-                                                        newSet.add(child.id);
+                                                        newSet.add(child);
                                                         return newSet;
                                                     });
                                                 } else {
-                                                    setSelectNodeIds((set) => {
+                                                    setSelectNodes((set) => {
                                                         const newSet = new Set(
                                                             set,
                                                         );
-                                                        newSet.delete(child.id);
+                                                        newSet.delete(child);
                                                         return newSet;
                                                     });
                                                 }
@@ -330,8 +327,8 @@ export default function SceneScreen() {
                                         <Button
                                             className="flex grow gap-2 justify-start overflow-hidden rounded-none border-none bg-transparent hover:bg-transparent active:bg-transparent py-2 text-left h-auto w-auto focus-visible:ring-inset"
                                             onClick={() => {
-                                                setSelectNodeIds(
-                                                    new Set([child.id]),
+                                                setSelectNodes(
+                                                    new Set([child]),
                                                 );
                                                 console.log(child);
                                             }}
