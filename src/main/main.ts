@@ -7,6 +7,7 @@ import {
     Menu,
     MenuItem,
     MenuItemConstructorOptions,
+    systemPreferences,
     WebContents,
 } from "electron";
 import process from "process";
@@ -152,6 +153,10 @@ function registerIPCHandlers() {
         const file = fs.readFileSync(filePath);
         return file;
     });
+
+    ipcMain.handle("get-accent-color", () => {
+        return "#" + systemPreferences.getAccentColor().substring(0, 6);
+    });
 }
 
 const isMac = process.platform === "darwin";
@@ -224,6 +229,11 @@ menuTemplate.push({
 menuTemplate.push({
     label: "Edit",
     role: "editMenu",
+});
+
+menuTemplate.push({
+    label: "View",
+    role: "viewMenu",
 });
 
 menuTemplate.push({

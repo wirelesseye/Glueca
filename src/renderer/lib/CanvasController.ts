@@ -3,6 +3,7 @@ import { limit } from "./utils";
 import { Dim, Pos } from "src/coordinate";
 import { GluNode, GluObject } from "src/glunode";
 import { nanoid } from "nanoid";
+import { accentColor } from "./theme";
 
 export default class CanvasController {
     private ctx: CanvasRenderingContext2D | null = null;
@@ -91,14 +92,14 @@ export default class CanvasController {
             const y =
                 this.ctx.canvas.height / 2 - this.scene.viewPos.y + node.pos.y;
             this.ctx.lineWidth = (5 * dpr) / this.scene.zoom;
-            this.ctx.strokeStyle = "#38f";
+            this.ctx.strokeStyle = accentColor;
             this.ctx.beginPath();
             this.ctx.roundRect(
-                x - (10 * dpr) / this.scene.zoom,
-                y - (10 * dpr) / this.scene.zoom,
-                node.dim.width + (20 * dpr) / this.scene.zoom,
-                node.dim.height + (20 * dpr) / this.scene.zoom,
-                (10 * dpr) / this.scene.zoom,
+                x - (5 * dpr) / this.scene.zoom,
+                y - (5 * dpr) / this.scene.zoom,
+                node.dim.width + (10 * dpr) / this.scene.zoom,
+                node.dim.height + (10 * dpr) / this.scene.zoom,
+                (5 * dpr) / this.scene.zoom,
             );
             this.ctx.stroke();
         }

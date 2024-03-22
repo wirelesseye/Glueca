@@ -32,10 +32,10 @@ export default function WelcomeScreen() {
     };
 
     return (
-        <ThemeContainer dark={dark} className="flex flex-col h-full">
+        <ThemeContainer dark={dark} className="flex h-full flex-col">
             <Background background="transparent" />
             <CustomTitleBar>
-                <div className="flex items-center ml-auto mr-1 no-drag-region">
+                <div className="no-drag-region ml-auto mr-1 flex items-center">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
@@ -56,23 +56,25 @@ export default function WelcomeScreen() {
                     </DropdownMenu>
                 </div>
             </CustomTitleBar>
-            <div className="flex flex-col gap-8 grow mt-[38px] justify-center items-center">
+            <div className="mt-[38px] flex grow flex-col items-center justify-center gap-8">
                 <div className="text-3xl font-bold">Welcome</div>
                 <div className="flex gap-5">
                     <Button
-                        className="flex flex-col gap-2 h-24 bg-background/30 hover:bg-muted/30"
+                        variant="ghost-accent"
+                        className="flex h-24 flex-col gap-2 bg-background/30"
                         onClick={newScene}
                     >
-                        <div className="h-10 w-10 flex items-center justify-center">
+                        <div className="flex h-10 w-10 items-center justify-center">
                             <PlusIcon absoluteStrokeWidth size={35} />
                         </div>
                         <div>New Scene</div>
                     </Button>
                     <Button
-                        className="flex flex-col gap-2 h-24 bg-background/30 hover:bg-muted/30"
+                        variant="ghost-accent"
+                        className="flex h-24 flex-col gap-2 bg-background/30"
                         onClick={openScene}
                     >
-                        <div className="h-10 w-10 flex items-center justify-center">
+                        <div className="flex h-10 w-10 items-center justify-center">
                             <FileIcon absoluteStrokeWidth size={30} />
                         </div>
                         Open Scene

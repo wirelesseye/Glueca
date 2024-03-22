@@ -10,4 +10,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
     saveFile: (filePath: string, data: Uint8Array) =>
         ipcRenderer.send("save-file", filePath, data),
     readFile: (filePath: string) => ipcRenderer.invoke("read-file", filePath),
+    getAccentColor: () => ipcRenderer.invoke("get-accent-color"),
 });

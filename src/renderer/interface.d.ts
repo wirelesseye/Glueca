@@ -6,6 +6,7 @@ export interface IElectronAPI {
     onOpenScene: (callback: (filePath: string) => void) => void;
     saveFile: (filePath: string, data: Uint8Array) => void;
     readFile: (filePath: string) => Promise<Uint8Array>;
+    getAccentColor: () => Promise<string>;
 }
 
 declare global {
