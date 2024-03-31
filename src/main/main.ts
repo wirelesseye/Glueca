@@ -114,7 +114,7 @@ async function openScene(target?: WebContents) {
     const result = await dialog.showOpenDialog({
         defaultPath: path.join(app.getPath("documents"), "Glueca"),
         properties: ["openFile", "multiSelections"],
-        filters: [{ name: "Glueca Scene File", extensions: ["gluca"] }],
+        filters: [{ name: "Glueca Scene File", extensions: ["glueca"] }],
     });
 
     if (!result.canceled) {
