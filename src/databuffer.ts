@@ -21,7 +21,9 @@ export default class DataBuffer {
     }
 
     static fromUint8Array(uint8Array: Uint8Array) {
-        return new DataBuffer(uint8Array.byteLength, uint8Array);
+        const dataBuffer = new DataBuffer(uint8Array.byteLength, new Uint8Array(uint8Array.byteLength));
+        dataBuffer.uint8Array.set(uint8Array);
+        return dataBuffer;
     }
 
     toUint8Array() {
@@ -136,7 +138,10 @@ export default class DataBuffer {
 
     getBlob() {
         const length = this.getI32();
-        const uint8Array = this.uint8Array.subarray(this.offset, this.offset + length);
+        const uint8Array = this.uint8Array.subarray(
+            this.offset,
+            this.offset + length,
+        );
         this.offset += length;
         return new Blob([uint8Array]);
     }
