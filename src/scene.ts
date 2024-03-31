@@ -44,7 +44,7 @@ export class Scene {
     }
 
     async serialize() {
-        const dataBuffer = new DataBuffer();
+        const dataBuffer = DataBuffer.create();
         dataBuffer.putString("GLUECA", true);
         dataBuffer.putI32(1);
         await this.viewPos.writeToDataBuffer(dataBuffer);

@@ -1,43 +1,64 @@
-export default class DataBuffer {
-    private buffer: number[];
-    private offset: number;
+const INIT_CAPACITY = 1000000;
 
-    constructor() {
-        this.buffer = [];
+export default class DataBuffer {
+    private capacity: number;
+    private offset: number;
+    private uint8Array: Uint8Array;
+    private dataview: DataView;
+
+    private textEncoder = new TextEncoder();
+    private textDecoder = new TextDecoder();
+
+    private constructor(capacity: number, uint8Array: Uint8Array) {
+        this.capacity = capacity;
+        this.uint8Array = uint8Array;
         this.offset = 0;
+        this.dataview = new DataView(this.uint8Array.buffer);
+    }
+
+    static create() {
+        return new DataBuffer(INIT_CAPACITY, new Uint8Array(INIT_CAPACITY));
     }
 
     static fromUint8Array(uint8Array: Uint8Array) {
-        const dataBuffer = new DataBuffer();
-        dataBuffer.buffer = Array.from(uint8Array);
-        return dataBuffer;
+        return new DataBuffer(uint8Array.byteLength, uint8Array);
     }
 
     toUint8Array() {
-        return new Uint8Array(this.buffer);
+        return this.uint8Array.subarray(0, this.offset);
+    }
+
+    private ensureSpace(byteLength: number) {
+        while (this.offset + byteLength > this.capacity) {
+            this.capacity *= 2;
+        }
+        const newUint8Array = new Uint8Array(this.capacity);
+        newUint8Array.set(this.uint8Array);
+        this.uint8Array = newUint8Array;
+        this.dataview = new DataView(this.uint8Array.buffer);
     }
 
     putString(input: string, omitLength?: boolean) {
-        const encoder = new TextEncoder();
-        const encoded = encoder.encode(input);
+        const encoded = this.textEncoder.encode(input);
         if (!omitLength) {
             this.putI32(encoded.length);
         }
-        encoded.forEach((byte) => this.buffer.push(byte), this);
+        this.ensureSpace(encoded.byteLength);
+        this.uint8Array.set(encoded, this.offset);
+        this.offset += encoded.byteLength;
     }
 
     getString(peek?: boolean, length?: number) {
         if (length === undefined) {
             length = this.getI32(peek);
         }
-        const uint8Array = new Uint8Array(length);
-        for (let i = 0; i < length; i++) {
-            uint8Array[i] = this.buffer[this.offset + i];
-        }
+        const str = this.textDecoder.decode(
+            this.uint8Array.subarray(this.offset, this.offset + length),
+        );
         if (!peek) {
             this.offset += length;
         }
-        return new TextDecoder().decode(uint8Array);
+        return str;
     }
 
     putBoolean(input: boolean) {
@@ -49,87 +70,73 @@ export default class DataBuffer {
     }
 
     putI8(input: number) {
-        const arrayBuffer = new ArrayBuffer(1);
-        new DataView(arrayBuffer).setInt8(0, input);
-        this.buffer.push(...new Uint8Array(arrayBuffer));
+        this.ensureSpace(1);
+        this.dataview.setInt8(this.offset, input);
+        this.offset += 1;
     }
 
     getI8(peek?: boolean) {
-        const arrayBuffer = new ArrayBuffer(1);
-        const uint8Array = new Uint8Array(arrayBuffer);
-        uint8Array[0] = this.buffer[this.offset];
+        const value = this.dataview.getInt8(this.offset);
         if (!peek) {
             this.offset += 1;
         }
-        return new DataView(arrayBuffer).getInt8(0);
+        return value;
     }
 
     putI32(input: number) {
-        const arrayBuffer = new ArrayBuffer(4);
-        new DataView(arrayBuffer).setInt32(0, input);
-        this.buffer.push(...new Uint8Array(arrayBuffer));
+        this.ensureSpace(4);
+        this.dataview.setInt32(this.offset, input);
+        this.offset += 4;
     }
 
     getI32(peek?: boolean) {
-        const arrayBuffer = new ArrayBuffer(4);
-        const uint8Array = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < 4; i++) {
-            uint8Array[i] = this.buffer[this.offset + i];
-        }
+        const value = this.dataview.getInt32(this.offset);
         if (!peek) {
             this.offset += 4;
         }
-        return new DataView(arrayBuffer).getInt32(0);
+        return value;
     }
 
     putF32(input: number) {
-        const arrayBuffer = new ArrayBuffer(4);
-        new DataView(arrayBuffer).setFloat32(0, input);
-        this.buffer.push(...new Uint8Array(arrayBuffer));
+        this.ensureSpace(4);
+        this.dataview.setFloat32(this.offset, input);
+        this.offset += 4;
     }
 
     getF32(peek?: boolean) {
-        const arrayBuffer = new ArrayBuffer(4);
-        const uint8Array = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < 4; i++) {
-            uint8Array[i] = this.buffer[this.offset + i];
-        }
+        const value = this.dataview.getFloat32(this.offset);
         if (!peek) {
             this.offset += 4;
         }
-        return new DataView(arrayBuffer).getFloat32(0);
+        return value;
     }
 
     putF64(input: number) {
-        const arrayBuffer = new ArrayBuffer(8);
-        new DataView(arrayBuffer).setFloat64(0, input);
-        this.buffer.push(...new Uint8Array(arrayBuffer));
+        this.ensureSpace(8);
+        this.dataview.setFloat64(this.offset, input);
+        this.offset += 8;
     }
 
     getF64(peek?: boolean) {
-        const arrayBuffer = new ArrayBuffer(8);
-        const uint8Array = new Uint8Array(arrayBuffer);
-        for (let i = 0; i < 8; i++) {
-            uint8Array[i] = this.buffer[this.offset + i];
-        }
+        const value = this.dataview.getFloat64(this.offset);
         if (!peek) {
             this.offset += 8;
         }
-        return new DataView(arrayBuffer).getFloat64(0);
+        return value;
     }
 
     async putBlob(input: Blob) {
         const arrayBuffer = await input.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
-        this.putI32(uint8Array.length);
-        uint8Array.forEach((byte) => this.buffer.push(byte), this);
+        this.putI32(uint8Array.byteLength);
+        this.ensureSpace(uint8Array.byteLength);
+        this.uint8Array.set(uint8Array, this.offset);
+        this.offset += uint8Array.byteLength;
     }
 
     getBlob() {
         const length = this.getI32();
-        const uint8Array = new Uint8Array(
-            this.buffer.slice(this.offset, this.offset + length),
-        );
+        const uint8Array = this.uint8Array.subarray(this.offset, this.offset + length);
         this.offset += length;
         return new Blob([uint8Array]);
     }
