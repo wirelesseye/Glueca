@@ -195,7 +195,7 @@ export default function SceneScreen() {
                                     size="sm"
                                     onClick={saveScene}
                                 >
-                                    <SaveIcon size={20} />
+                                    <SaveIcon size={20} strokeWidth={1.8} />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -210,7 +210,7 @@ export default function SceneScreen() {
                                         size="sm"
                                         onClick={() => setShowLayers(true)}
                                     >
-                                        <ListTreeIcon size={20} />
+                                        <ListTreeIcon size={20} strokeWidth={1.8} />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -225,7 +225,7 @@ export default function SceneScreen() {
                                     size="sm"
                                     onClick={importFile}
                                 >
-                                    <ImportIcon size={20} />
+                                    <ImportIcon size={20} strokeWidth={1.8} />
                                 </Button>
                             </TooltipTrigger>
                             <TooltipContent>
@@ -236,7 +236,7 @@ export default function SceneScreen() {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
-                                <EllipsisIcon size={20} />
+                                <EllipsisIcon size={20} strokeWidth={1.8} />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
