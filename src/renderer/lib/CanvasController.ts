@@ -185,7 +185,7 @@ export default class CanvasController {
             this.scene.zoom = limit(
                 this.scene.zoom - e.movementY * 0.01,
                 0.1,
-                3,
+                10,
             );
         } else {
             this.scene.viewPos = new Pos(
@@ -256,7 +256,7 @@ export default class CanvasController {
         if (!this.scene) return;
 
         if (e.ctrlKey) {
-            this.scene.zoom = limit(this.scene.zoom - e.deltaY * 0.01, 0.1, 3);
+            this.scene.zoom = limit(this.scene.zoom - e.deltaY * 0.01, 0.1, 10);
         } else {
             this.scene.viewPos = new Pos(
                 this.scene.viewPos.x + e.deltaX / this.scene.zoom,
