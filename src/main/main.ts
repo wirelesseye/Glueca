@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from "electron";
 import process from "process";
-import * as windows from "./windows";
+import { createSceneWindow } from "./windows";
 import { registerIPCHandlers } from "./handlers";
 import { updateMenu } from "./menu";
 
@@ -10,7 +10,7 @@ import { updateMenu } from "./menu";
 app.on("ready", () => {
     registerIPCHandlers();
     updateMenu();
-    windows.createSceneWindow();
+    createSceneWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -26,6 +26,6 @@ app.on("activate", () => {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
-        windows.createSceneWindow();
+        createSceneWindow();
     }
 });

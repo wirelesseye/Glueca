@@ -11,6 +11,7 @@ import SettingsScreen from "./screens/SettingsScreen";
 import SceneScreen from "./screens/SceneScreen";
 import { Global, css } from "@emotion/react";
 import { colors } from "./lib/theme";
+import { Toaster } from "@/components/ui/sonner";
 
 const globalStyles = css`
     @media (prefers-color-scheme: dark) {
@@ -57,5 +58,10 @@ const hashHistory = createHashHistory();
 const router = createRouter({ routeTree, history: hashHistory });
 
 export default function App() {
-    return <RouterProvider router={router} />;
+    return (
+        <>
+            <RouterProvider router={router} />
+            <Toaster />
+        </>
+    );
 }

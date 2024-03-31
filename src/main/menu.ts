@@ -59,12 +59,15 @@ export function buildMenu(window?: BrowserWindow) {
                 accelerator: "Shift+CmdOrCtrl+W",
             },
             {
-                label: "Close Tab",
+                label: "Close Scene",
                 accelerator: "CmdOrCtrl+W",
             },
             {
                 label: "Save",
                 accelerator: "CmdOrCtrl+S",
+                click: (_, window) => {
+                    if (window) handlers.saveScene(window.webContents);
+                },
             },
             {
                 label: "Duplicate",
@@ -108,11 +111,11 @@ export function buildMenu(window?: BrowserWindow) {
                 role: "minimize",
             },
             {
-                role: "zoom"
+                role: "zoom",
             },
             {
                 label: "Always on Top",
-                accelerator: "CmdOrCtrl+P",
+                accelerator: isMac ? "Cmd+Option+T" : "Ctrl+Alt+P",
                 type: "checkbox",
                 checked: window ? window.isAlwaysOnTop() : false,
                 click: (_, window) => {

@@ -35,9 +35,10 @@ import {
     XIcon,
 } from "lucide-react";
 import { nanoid } from "nanoid";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { GluGroup, GluNode, GluObject } from "src/glunode";
 import { css } from "@emotion/react";
+import { toast } from "sonner";
 
 export default function SceneScreen() {
     const dark = useDarkTheme();
@@ -106,13 +107,25 @@ export default function SceneScreen() {
         setUpdateCounter((counter) => counter + 1);
     };
 
-    const saveScene = () => {
+    const saveScene = useCallback(() => {
         if (scene) {
-            scene
-                .serialize()
-                .then((data) => window.electronAPI.saveFile(filePath, data));
+            const promise = (async() => {
+                const data = await scene.serialize();
+                await window.electronAPI.saveFile(filePath, data);
+            })();
+            toast.promise(promise, {
+                loading: "Saving…",
+                success: "Saved",
+            });
         }
-    };
+    }, [scene]);
+
+    useEffect(() => {
+        window.electronAPI.onSaveScene(saveScene);
+        return () => {
+            window.electronAPI.removeAllListeners("save-scene");
+        }
+    }, [saveScene]);
 
     const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {

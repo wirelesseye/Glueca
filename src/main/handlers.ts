@@ -52,6 +52,10 @@ export async function newScene(target?: WebContents) {
     openSceneByPaths([filePath], target);
 }
 
+export function saveScene(target: WebContents) {
+    target.send("save-scene");
+}
+
 export function toggleAlwaysOnTop(window: BrowserWindow) {
     window.setAlwaysOnTop(!window.isAlwaysOnTop(), "floating");
 }
@@ -73,7 +77,7 @@ export function registerIPCHandlers() {
         openScene(event.sender),
     );
 
-    ipcMain.on("save-file", (_event, filePath: string, data: Uint8Array) => {
+    ipcMain.handle("save-file", (_event, filePath: string, data: Uint8Array) => {
         fs.writeFileSync(filePath, data);
     });
 

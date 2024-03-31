@@ -1,10 +1,12 @@
 export interface IElectronAPI {
+    removeAllListeners: (channel: string) => void;
     quit: () => void;
     openSettings: () => void;
     newScene: () => void;
     openScene: () => void;
     onOpenScene: (callback: (filePath: string) => void) => void;
-    saveFile: (filePath: string, data: Uint8Array) => void;
+    onSaveScene: (callback: () => void) => void;
+    saveFile: (filePath: string, data: Uint8Array) => Promise<void>;
     readFile: (filePath: string) => Promise<Uint8Array>;
     getAccentColor: () => Promise<string>;
 }
