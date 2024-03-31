@@ -25,7 +25,7 @@ export class Scene {
         this.rTree = rTree;
     }
 
-    static default() {
+    static create() {
         const root = new GluGroup(
             nanoid(),
             "root",
@@ -46,7 +46,7 @@ export class Scene {
     async serialize() {
         const dataBuffer = DataBuffer.create();
         dataBuffer.putString("GLUECA", true);
-        dataBuffer.putI32(1);
+        dataBuffer.putI32(1); // file version
         await this.viewPos.writeToDataBuffer(dataBuffer);
         dataBuffer.putF32(this.zoom);
         await this.root.writeToDataBuffer(dataBuffer);
@@ -59,7 +59,7 @@ export class Scene {
         if (validate !== "GLUECA") {
             console.error("Invalid scene file");
         }
-        dataBuffer.getI32(); // get file version
+        dataBuffer.getI32(); // file version
         const viewPos = Pos.readFromDataBuffer(dataBuffer);
         const zoom = dataBuffer.getF32();
         const root = GluGroup.readFromDataBuffer(dataBuffer);

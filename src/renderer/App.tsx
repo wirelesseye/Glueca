@@ -7,7 +7,6 @@ import {
     createRouter,
 } from "@tanstack/react-router";
 import "./styles.css";
-import WelcomeScreen from "./screens/WelcomeScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import SceneScreen from "./screens/SceneScreen";
 import { Global, css } from "@emotion/react";
@@ -40,16 +39,11 @@ const routeTree = rootRoute.addChildren([
     createRoute({
         getParentRoute: () => rootRoute,
         path: "/",
-        component: WelcomeScreen,
+        component: SceneScreen,
     }),
     createRoute({
         getParentRoute: () => rootRoute,
         path: "/index.html",
-        component: WelcomeScreen,
-    }),
-    createRoute({
-        getParentRoute: () => rootRoute,
-        path: "/scene",
         component: SceneScreen,
     }),
     createRoute({
