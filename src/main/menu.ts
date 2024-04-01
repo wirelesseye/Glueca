@@ -61,6 +61,9 @@ export function buildMenu(window?: BrowserWindow) {
             {
                 label: "Close Scene",
                 accelerator: "CmdOrCtrl+W",
+                click: (_, window) => {
+                    if (window) handlers.closeScene(window.webContents);
+                },
             },
             {
                 label: "Save",

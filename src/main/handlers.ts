@@ -56,6 +56,10 @@ export function saveScene(target: WebContents) {
     target.send("save-scene");
 }
 
+export function closeScene(target: WebContents) {
+    target.send("close-scene");
+}
+
 export function toggleAlwaysOnTop(window: BrowserWindow) {
     window.setAlwaysOnTop(!window.isAlwaysOnTop(), "floating");
 }
@@ -77,9 +81,12 @@ export function registerIPCHandlers() {
         openScene(event.sender),
     );
 
-    ipcMain.handle("save-file", (_event, filePath: string, data: Uint8Array) => {
-        fs.writeFileSync(filePath, data);
-    });
+    ipcMain.handle(
+        "save-file",
+        (_event, filePath: string, data: Uint8Array) => {
+            fs.writeFileSync(filePath, data);
+        },
+    );
 
     ipcMain.handle("read-file", (_event, filePath: string): Uint8Array => {
         const file = fs.readFileSync(filePath);

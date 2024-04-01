@@ -39,6 +39,8 @@ import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import { GluGroup, GluNode, GluObject } from "src/glunode";
 import { css } from "@emotion/react";
 import { toast } from "sonner";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import Optional from "@/components/Optional";
 
 export default function SceneScreen() {
     const dark = useDarkTheme();
@@ -68,16 +70,6 @@ export default function SceneScreen() {
             });
         }
     }, [filePath, scenes, isLoading]);
-
-    useEffect(() => {
-        window.electronAPI.onOpenScene((filePath: string) => {
-            setScenes((scenes) => ({
-                ...scenes,
-                [filePath]: null,
-            }));
-            setFilePath(filePath);
-        });
-    }, []);
 
     const scene: Scene | null = scenes[filePath] ?? null;
 
@@ -109,7 +101,7 @@ export default function SceneScreen() {
 
     const saveScene = useCallback(() => {
         if (scene) {
-            const promise = (async() => {
+            const promise = (async () => {
                 const data = await scene.serialize();
                 await window.electronAPI.saveFile(filePath, data);
             })();
@@ -120,12 +112,46 @@ export default function SceneScreen() {
         }
     }, [scene]);
 
+    const closeScene = useCallback(
+        (path?: string) => {
+            if (!path) path = filePath;
+
+            const newScenes = { ...scenes };
+            delete newScenes[path];
+            setScenes(newScenes);
+
+            if (filePath === path) {
+                if (Object.keys(newScenes).length > 0) {
+                    setFilePath(Object.keys(newScenes)[0]);
+                }
+            }
+        },
+        [filePath, scenes],
+    );
+
+    useEffect(() => {
+        window.electronAPI.onOpenScene((filePath: string) => {
+            setScenes((scenes) => ({
+                ...scenes,
+                [filePath]: null,
+            }));
+            setFilePath(filePath);
+        });
+    }, []);
+
     useEffect(() => {
         window.electronAPI.onSaveScene(saveScene);
         return () => {
             window.electronAPI.removeAllListeners("save-scene");
-        }
+        };
     }, [saveScene]);
+
+    useEffect(() => {
+        window.electronAPI.onCloseScene(closeScene);
+        return () => {
+            window.electronAPI.removeAllListeners("close-scene");
+        };
+    }, [closeScene]);
 
     const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -155,32 +181,14 @@ export default function SceneScreen() {
     return (
         <ThemeContainer dark={dark} className="flex h-full flex-col">
             <Background background="transparent" />
-            <CustomTitleBar>
-                {Object.keys(scenes).length > 1 ? (
-                    <Tabs
-                        value={filePath}
-                        onValueChange={(value) => setFilePath(value)}
-                        className="w-[400px] grow"
-                    >
-                        <TabsList className="no-drag-region">
-                            {Object.keys(scenes).map((path) => {
-                                const filename = path
-                                    .replace(/^.*[\\/]/, "")
-                                    .replace(/\.[^/.]+$/, "");
-                                return (
-                                    <TabsTrigger
-                                        key={path}
-                                        className="bg-background/10 backdrop-blur-md"
-                                        value={path}
-                                    >
-                                        {filename}
-                                    </TabsTrigger>
-                                );
-                            })}
-                        </TabsList>
-                    </Tabs>
-                ) : null}
-                <div className="no-drag-region ml-auto mr-1 flex items-center gap-1">
+            <CustomTitleBar className="gap-3">
+                <SceneTabs
+                    scenes={scenes}
+                    closeScene={closeScene}
+                    filePath={filePath}
+                    setFilePath={setFilePath}
+                />
+                <div className="no-drag-region ml-auto mr-2 flex items-center gap-1">
                     <input
                         type="file"
                         ref={fileInput}
@@ -210,7 +218,10 @@ export default function SceneScreen() {
                                         size="sm"
                                         onClick={() => setShowLayers(true)}
                                     >
-                                        <ListTreeIcon size={20} strokeWidth={1.8} />
+                                        <ListTreeIcon
+                                            size={20}
+                                            strokeWidth={1.8}
+                                        />
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -251,7 +262,7 @@ export default function SceneScreen() {
                                 Open Scene…
                                 <div className="ml-auto opacity-50">⌘O</div>
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => closeScene()}>
                                 Close Scene
                                 <div className="ml-auto opacity-50">⌘W</div>
                             </DropdownMenuItem>
@@ -340,6 +351,67 @@ function Welcome({ newScene, openScene }: WelcomeProps) {
                 </Button>
             </div>
         </div>
+    );
+}
+
+interface SceneTabsProps {
+    scenes: Record<string, Scene | null>;
+    filePath: string;
+    setFilePath: React.Dispatch<React.SetStateAction<string>>;
+    closeScene: (path: string) => void;
+}
+
+function SceneTabs({
+    scenes,
+    filePath,
+    setFilePath,
+    closeScene,
+}: SceneTabsProps) {
+    return (
+        <Optional if={Object.keys(scenes).length > 1}>
+            <ScrollArea className="no-drag-region flex items-center">
+                <Tabs
+                    value={filePath}
+                    onValueChange={(value) => setFilePath(value)}
+                >
+                    <TabsList>
+                        {Object.keys(scenes).map((path) => {
+                            const filename = path
+                                .replace(/^.*[\\/]/, "")
+                                .replace(/\.[^/.]+$/, "");
+                            return (
+                                <div key={path} className="group relative">
+                                    <TabsTrigger
+                                        className="bg-background/30 px-6 ring-inset backdrop-blur-md"
+                                        value={path}
+                                        onMouseUp={(e) => {
+                                            if (e.button === 1)
+                                                closeScene(path);
+                                        }}
+                                    >
+                                        {filename}
+                                    </TabsTrigger>
+                                    <Button
+                                        className="absolute left-0 top-1 z-10 h-6 w-6 p-0 opacity-0 transition-opacity
+                                            group-hover:opacity-100"
+                                        variant="ghost"
+                                        tabIndex={-1}
+                                        onClick={() => closeScene(path)}
+                                    >
+                                        <XIcon
+                                            size={12}
+                                            absoluteStrokeWidth
+                                            strokeWidth={1.5}
+                                        />
+                                    </Button>
+                                </div>
+                            );
+                        })}
+                    </TabsList>
+                </Tabs>
+                <ScrollBar orientation="horizontal" className="opacity-50" />
+            </ScrollArea>
+        </Optional>
     );
 }
 

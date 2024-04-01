@@ -4,17 +4,20 @@ import { ReactNode } from "react";
 interface CustomTitleBarProps {
     children?: ReactNode;
     background?: boolean;
+    className?: string;
 }
 
 export default function CustomTitleBar({
     children,
     background,
+    className,
 }: CustomTitleBarProps) {
     return (
         <div
             className={cn(
-                "flex pl-[100px] fixed z-50 top-0 left-0 right-0 h-[38px] drag-region",
+                "drag-region fixed left-0 right-0 top-0 z-50 flex h-[40px] pl-[100px]",
                 { "bg-background/50 backdrop-blur-sm": background },
+                className,
             )}
         >
             {children}
