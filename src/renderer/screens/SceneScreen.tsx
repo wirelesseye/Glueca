@@ -296,21 +296,21 @@ export default function SceneScreen() {
                         setSelectNodes={setSelectNodes}
                         updateScene={updateScene}
                     />
-                    {showInfo && scene ? (
+                    <Optional show={showInfo}>
                         <div className="absolute left-[10px] top-[40px] rounded-lg border bg-popover px-4 py-2">
                             <div>x: {scene.viewPos.x.toFixed(2)}</div>
                             <div>y: {scene.viewPos.y.toFixed(2)}</div>
                             <div>zoom: {scene.zoom.toFixed(2)}</div>
                         </div>
-                    ) : null}
-                    {showLayers ? (
+                    </Optional>
+                    <Optional show={showLayers}>
                         <Layers
                             scene={scene}
                             selectNodes={selectNodes}
                             setSelectNodes={setSelectNodes}
                             setShowLayers={setShowLayers}
                         />
-                    ) : null}
+                    </Optional>
                 </>
             ) : (
                 <Welcome newScene={newScene} openScene={openScene} />
@@ -368,7 +368,7 @@ function SceneTabs({
     closeScene,
 }: SceneTabsProps) {
     return (
-        <Optional if={Object.keys(scenes).length > 1}>
+        <Optional show={Object.keys(scenes).length > 1}>
             <ScrollArea className="no-drag-region flex items-center">
                 <Tabs
                     value={filePath}
