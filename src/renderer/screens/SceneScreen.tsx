@@ -458,7 +458,7 @@ function Layers({
                                 className={cn(
                                     "flex shrink-0 items-center overflow-hidden rounded-md hover:bg-muted/50",
                                     {
-                                        "!bg-accent !text-accent-foreground":
+                                        "!bg-accent-darken !text-accent-foreground":
                                             select,
                                     },
                                 )}
