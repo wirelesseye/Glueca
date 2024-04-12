@@ -382,7 +382,7 @@ function SceneTabs({
                             return (
                                 <div key={path} className="group relative">
                                     <TabsTrigger
-                                        className="bg-background/30 px-6 ring-inset backdrop-blur-md"
+                                        className="bg-background/10 px-6 ring-inset backdrop-blur-md backdrop-contrast-50"
                                         value={path}
                                         onMouseUp={(e) => {
                                             if (e.button === 1)
@@ -393,7 +393,7 @@ function SceneTabs({
                                     </TabsTrigger>
                                     <Button
                                         className="absolute left-0 top-1 z-10 h-6 w-6 p-0 opacity-0 transition-opacity
-                                            group-hover:opacity-100"
+                                            group-hover:opacity-100 active:bg-transparent active:text-muted-foreground/30"
                                         variant="ghost"
                                         tabIndex={-1}
                                         onClick={() => closeScene(path)}
@@ -439,15 +439,15 @@ function Layers({
             className="absolute right-[10px] top-[40px] flex max-h-[calc(100vh-50px)] w-[300px]
                 flex-col overflow-hidden rounded-lg border bg-popover"
         >
-            <div className="flex shrink-0 items-center font-medium">
+            <div className="flex shrink-0 items-center justify-center border-b border-border bg-muted/50 h-8">
                 <Button
                     variant="ghost"
-                    className="m-1 h-auto w-auto p-2"
+                    className="absolute left-1 h-auto w-auto p-1"
                     onClick={() => setShowLayers(false)}
                 >
                     <XIcon size={16} />
                 </Button>
-                Layers
+                <span className="font-medium text-sm">Layers</span>
             </div>
             {rootNodes ? (
                 <div className="flex flex-col overflow-y-auto overflow-x-hidden p-1">
@@ -456,7 +456,7 @@ function Layers({
                             <div
                                 key={node.id}
                                 className={cn(
-                                    "flex shrink-0 items-center overflow-hidden rounded-md hover:bg-muted/50",
+                                    "flex shrink-0 items-center overflow-hidden rounded-md hover:bg-muted/80",
                                     {
                                         "!bg-accent-darken !text-accent-foreground":
                                             select,
@@ -480,7 +480,7 @@ function Layers({
                                 `}
                             >
                                 <Checkbox
-                                    className="ml-3"
+                                    className="ml-2.5"
                                     checked={selectNodes.has(node)}
                                     onCheckedChange={(checked) => {
                                         if (checked) {
@@ -500,7 +500,7 @@ function Layers({
                                 />
                                 <Button
                                     className="flex h-auto w-auto grow justify-start gap-2 overflow-hidden rounded-none
-                                        border-none bg-transparent py-2 text-left hover:bg-transparent
+                                        border-none bg-transparent px-3 py-1.5 text-left hover:bg-transparent
                                         focus-visible:ring-inset active:bg-transparent"
                                     onClick={() => {
                                         setSelectNodes(new Set([node]));

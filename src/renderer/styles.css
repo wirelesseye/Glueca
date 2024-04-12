@@ -32,7 +32,6 @@
         --border: 0 0% 90%;
         --input: 220 13% 91%;
         --ring: 224 71.4% 4.1%;
-        --checkbox: linear-gradient(to bottom, #f5f5f5, #ffffff);
 
         --radius: 0.5rem;
     }
@@ -61,8 +60,6 @@
 
         --border: 240 4% 20%;
         --input: 215 27.9% 16.9%;
-        /* --ring: 216 12.2% 83.9%; */
-        --checkbox: linear-gradient(to bottom, #4c4c4c, #5b5b5b);
     }
 }
 
