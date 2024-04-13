@@ -1,41 +1,31 @@
 import CanvasController from "@/lib/CanvasController";
 import { Scene } from "src/scene";
-import { useCallback, useEffect, useRef } from "react";
-import { GluNode } from "src/glunode";
+import { useCallback, useEffect, useMemo } from "react";
 
 interface CanvasViewProps {
     scene: Scene | null;
-    selectNodes: Set<GluNode>;
-    setSelectNodes: (selectNodes: Set<GluNode>) => void;
     updateScene: () => void;
 }
 
 export default function CanvasView({
     scene,
-    selectNodes,
-    setSelectNodes,
     updateScene,
 }: CanvasViewProps) {
-    const controller = useRef(new CanvasController());
+    const controller = useMemo(() => new CanvasController(), []);
 
     const onCanvasRefUpdate = useCallback((ref: HTMLCanvasElement) => {
         if (ref) {
             const ctx = ref.getContext("2d");
             if (ctx) {
-                controller.current.setCtx(ctx);
-                controller.current.onSceneUpdate(updateScene);
-                controller.current.onSelectNodesUpdate(setSelectNodes);
+                controller.initialize(ctx);
+                controller.onSceneUpdate(updateScene);
             }
         }
     }, []);
 
     useEffect(() => {
-        controller.current.setScene(scene);
+        controller.setScene(scene);
     }, [scene]);
-
-    useEffect(() => {
-        controller.current.updateSelectNodes(selectNodes);
-    }, [selectNodes]);
 
     return (
         <canvas

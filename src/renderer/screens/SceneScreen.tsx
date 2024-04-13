@@ -1,11 +1,8 @@
-/** @jsxImportSource @emotion/react */
-
 import Background from "@/components/Background";
 import CanvasView from "@/components/CanvasView";
 import CustomTitleBar from "@/components/CustomTitleBar";
 import ThemeContainer from "@/components/ThemeContainer";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -26,21 +23,20 @@ import { useDarkTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import {
     EllipsisIcon,
-    EyeIcon,
-    FileIcon,
     ImportIcon,
     ListTreeIcon,
-    PlusIcon,
     SaveIcon,
     XIcon,
 } from "lucide-react";
 import { nanoid } from "nanoid";
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
-import { GluGroup, GluNode, GluObject } from "src/glunode";
-import { css } from "@emotion/react";
+import { GluObject } from "src/glunode";
 import { toast } from "sonner";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import Optional from "@/components/Optional";
+import Welcome from "@/components/Welcome";
+import Layers from "@/components/Layers";
+import { useForceUpdate } from "@/lib/hooks";
 
 export default function SceneScreen() {
     const dark = useDarkTheme();
@@ -53,8 +49,7 @@ export default function SceneScreen() {
     const [showInfo, setShowInfo] = useState(false);
     const [showLayers, setShowLayers] = useState(false);
 
-    const [selectNodes, setSelectNodes] = useState<Set<GluNode>>(new Set());
-    const setUpdateCounter = useState(0)[1];
+    const updateScene = useForceUpdate();
 
     useEffect(() => {
         if (filePath && scenes[filePath] === null && !isLoading) {
@@ -93,10 +88,6 @@ export default function SceneScreen() {
         if (fileInput.current) {
             fileInput.current.click();
         }
-    };
-
-    const updateScene = () => {
-        setUpdateCounter((counter) => counter + 1);
     };
 
     const saveScene = useCallback(() => {
@@ -157,18 +148,16 @@ export default function SceneScreen() {
         if (e.target.files) {
             const file = e.target.files[0];
             if (file && scene) {
-                scene
-                    .getRoot()
-                    .addNode(
-                        new GluObject(
-                            "image",
-                            nanoid(),
-                            file.name,
-                            scene.viewPos.clone(),
-                            new Dim(0, 0),
-                            file,
-                        ),
-                    );
+                scene.root.addChild(
+                    new GluObject(
+                        "image",
+                        nanoid(),
+                        file.name,
+                        scene.viewPos.clone(),
+                        new Dim(0, 0),
+                        file,
+                    ),
+                );
                 setScenes({
                     ...scenes,
                     [filePath]: scene,
@@ -290,12 +279,7 @@ export default function SceneScreen() {
             </CustomTitleBar>
             {scene ? (
                 <>
-                    <CanvasView
-                        scene={scene}
-                        selectNodes={selectNodes}
-                        setSelectNodes={setSelectNodes}
-                        updateScene={updateScene}
-                    />
+                    <CanvasView scene={scene} updateScene={updateScene} />
                     <Optional show={showInfo}>
                         <div className="absolute left-[10px] top-[40px] rounded-lg border bg-popover px-4 py-2">
                             <div>x: {scene.viewPos.x.toFixed(2)}</div>
@@ -304,53 +288,13 @@ export default function SceneScreen() {
                         </div>
                     </Optional>
                     <Optional show={showLayers}>
-                        <Layers
-                            scene={scene}
-                            selectNodes={selectNodes}
-                            setSelectNodes={setSelectNodes}
-                            setShowLayers={setShowLayers}
-                        />
+                        <Layers scene={scene} setShowLayers={setShowLayers} />
                     </Optional>
                 </>
             ) : (
                 <Welcome newScene={newScene} openScene={openScene} />
             )}
         </ThemeContainer>
-    );
-}
-
-interface WelcomeProps {
-    newScene: () => void;
-    openScene: () => void;
-}
-
-function Welcome({ newScene, openScene }: WelcomeProps) {
-    return (
-        <div className="mt-[38px] flex grow flex-col items-center justify-center gap-8">
-            <div className="text-3xl font-bold">Welcome</div>
-            <div className="flex gap-5">
-                <Button
-                    variant="ghost-accent"
-                    className="flex h-24 flex-col gap-2 bg-background/30"
-                    onClick={newScene}
-                >
-                    <div className="flex h-10 w-10 items-center justify-center">
-                        <PlusIcon absoluteStrokeWidth size={35} />
-                    </div>
-                    <div>New Scene</div>
-                </Button>
-                <Button
-                    variant="ghost-accent"
-                    className="flex h-24 flex-col gap-2 bg-background/30"
-                    onClick={openScene}
-                >
-                    <div className="flex h-10 w-10 items-center justify-center">
-                        <FileIcon absoluteStrokeWidth size={30} />
-                    </div>
-                    Open Scene
-                </Button>
-            </div>
-        </div>
     );
 }
 
@@ -393,7 +337,7 @@ function SceneTabs({
                                     </TabsTrigger>
                                     <Button
                                         className="absolute left-0 top-1 z-10 h-6 w-6 p-0 opacity-0 transition-opacity
-                                            group-hover:opacity-100 active:bg-transparent active:text-muted-foreground/30"
+                                            active:bg-transparent active:text-muted-foreground/30 group-hover:opacity-100"
                                         variant="ghost"
                                         tabIndex={-1}
                                         onClick={() => closeScene(path)}
@@ -412,111 +356,5 @@ function SceneTabs({
                 <ScrollBar orientation="horizontal" className="opacity-50" />
             </ScrollArea>
         </Optional>
-    );
-}
-
-interface LayersProps {
-    scene: Scene | null;
-    selectNodes: Set<GluNode>;
-    setSelectNodes: React.Dispatch<React.SetStateAction<Set<GluNode>>>;
-    setShowLayers: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-function Layers({
-    scene,
-    selectNodes,
-    setSelectNodes,
-    setShowLayers,
-}: LayersProps) {
-    const rootNodes: [GluNode, boolean][] | undefined = scene
-        ?.getRoot()
-        .getNodes()
-        .toReversed()
-        .map((node) => [node, selectNodes.has(node)]);
-
-    return (
-        <div
-            className="absolute right-[10px] top-[40px] flex max-h-[calc(100vh-50px)] w-[300px]
-                flex-col overflow-hidden rounded-lg border bg-popover"
-        >
-            <div className="flex shrink-0 items-center justify-center border-b border-border bg-muted/50 h-8">
-                <Button
-                    variant="ghost"
-                    className="absolute left-1 h-auto w-auto p-1"
-                    onClick={() => setShowLayers(false)}
-                >
-                    <XIcon size={16} />
-                </Button>
-                <span className="font-medium text-sm">Layers</span>
-            </div>
-            {rootNodes ? (
-                <div className="flex flex-col overflow-y-auto overflow-x-hidden p-1">
-                    {rootNodes.map(([node, select], i) =>
-                        node instanceof GluGroup ? null : (
-                            <div
-                                key={node.id}
-                                className={cn(
-                                    "flex shrink-0 items-center overflow-hidden rounded-md hover:bg-muted/80",
-                                    {
-                                        "!bg-accent-darken !text-accent-foreground":
-                                            select,
-                                    },
-                                )}
-                                css={css`
-                                    ${select && i > 0 && rootNodes[i - 1][1]
-                                        ? `
-                                            border-top-left-radius: 0;
-                                            border-top-right-radius: 0;
-                                        `
-                                        : undefined}
-                                    ${select &&
-                                    i < rootNodes.length - 1 &&
-                                    rootNodes[i + 1][1]
-                                        ? `
-                                            border-bottom-left-radius: 0;
-                                            border-bottom-right-radius: 0;
-                                        `
-                                        : undefined}
-                                `}
-                            >
-                                <Checkbox
-                                    className="ml-2.5"
-                                    checked={selectNodes.has(node)}
-                                    onCheckedChange={(checked) => {
-                                        if (checked) {
-                                            setSelectNodes((set) => {
-                                                const newSet = new Set(set);
-                                                newSet.add(node);
-                                                return newSet;
-                                            });
-                                        } else {
-                                            setSelectNodes((set) => {
-                                                const newSet = new Set(set);
-                                                newSet.delete(node);
-                                                return newSet;
-                                            });
-                                        }
-                                    }}
-                                />
-                                <Button
-                                    className="flex h-auto w-auto grow justify-start gap-2 overflow-hidden rounded-none
-                                        border-none bg-transparent px-3 py-1.5 text-left hover:bg-transparent
-                                        focus-visible:ring-inset active:bg-transparent"
-                                    onClick={() => {
-                                        setSelectNodes(new Set([node]));
-                                        console.log(node);
-                                    }}
-                                >
-                                    <span className="grow overflow-hidden text-ellipsis">
-                                        {node.name}
-                                    </span>
-                                    <EyeIcon className="shrink-0" size={16} />
-                                </Button>
-                            </div>
-                        ),
-                    )}
-                </div>
-            ) : null}
-        </div>
     );
 }

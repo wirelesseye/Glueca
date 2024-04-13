@@ -52,7 +52,7 @@ export abstract class GluNode {
             return 0;
         }
 
-        return ancestor.getNodes().indexOf(this);
+        return ancestor.getChildren().indexOf(this);
     }
 
     abstract render(ctx: CanvasRenderingContext2D, viewPos: Pos): void;
@@ -96,8 +96,8 @@ export class GluObject extends GluNode {
             image.onload = () => {
                 this.dim.width = image.width;
                 this.dim.height = image.height;
-                this.getScene()?.rTree.remove(this);
-                this.getScene()?.rTree.insert(this);
+                this.getScene()?.unregisterNode(this);
+                this.getScene()?.registerNode(this);
             };
             image.src = URL.createObjectURL(this.blob);
             this.image = image;
@@ -141,11 +141,11 @@ export class GluGroup extends GluNode {
         }
     }
 
-    getNodes() {
+    getChildren() {
         return [...this.children];
     }
 
-    addNode(node: GluNode) {
+    addChild(node: GluNode) {
         this.children.push(node);
         node.setParent(this);
         this.getScene()!.registerNode(node);

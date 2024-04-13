@@ -1,15 +1,16 @@
 import { nanoid } from "nanoid";
 import { Pos, Dim } from "./coordinate";
 import DataBuffer from "./databuffer";
-import RBush from "rbush";
+import RBush, { BBox } from "rbush";
 import { GluGroup, GluNode, GluObject } from "./glunode";
 
 export class Scene {
     viewPos: Pos;
     zoom: number;
-    private root: GluGroup;
+    root: GluGroup;
+    private rTree: RBush<GluObject>;
     private nodeById: Record<string, GluNode>;
-    rTree: RBush<GluObject>;
+    private selectNodes: Set<GluNode>;
 
     private constructor(
         viewPos: Pos,
@@ -23,6 +24,7 @@ export class Scene {
         this.zoom = zoom;
         this.nodeById = nodeById;
         this.rTree = rTree;
+        this.selectNodes = new Set();
     }
 
     static create() {
@@ -74,24 +76,59 @@ export class Scene {
         scene.registerNode(root);
         return scene;
     }
-
-    getRoot() {
-        return this.root;
-    }
-
+     
     registerNode(node: GluNode) {
         node.setScene(this);
         this.nodeById[node.id] = node;
         if (node instanceof GluObject) {
             this.rTree.insert(node);
         } else {
-            for (const child of (node as GluGroup).getNodes()) {
+            for (const child of (node as GluGroup).getChildren()) {
                 this.registerNode(child);
             }
         }
     }
 
-    getNode(nodeId: string) {
+    unregisterNode(node: GluNode) {
+        delete this.nodeById[node.id];
+        if (node instanceof GluObject) {
+            this.rTree.remove(node);
+        } else {
+            for (const child of (node as GluGroup).getChildren()) {
+                this.unregisterNode(child);
+            }
+        }
+    }
+
+    getNodeById(nodeId: string) {
         return this.nodeById[nodeId];
+    }
+
+    getNodesInRect(rect: BBox) {
+        return this.rTree.search(rect);
+    }
+
+    isNodeSelected(node: GluNode) {
+        return this.selectNodes.has(node);
+    }
+
+    selectNode(node: GluNode) {
+        this.selectNodes.add(node);
+    }
+
+    unselectNode(node: GluNode) {
+        this.selectNodes.delete(node);
+    }
+
+    unselectAllNodes() {
+        this.selectNodes.clear();
+    }
+
+    getSelectedNodes(): Iterable<GluNode> {
+        return this.selectNodes;
+    }
+
+    hasSelectNode() {
+        return this.selectNodes.size > 0;
     }
 }

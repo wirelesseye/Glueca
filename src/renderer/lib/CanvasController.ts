@@ -1,42 +1,30 @@
 import { Scene } from "src/scene";
 import { limit } from "./utils";
 import { Dim, Pos } from "src/coordinate";
-import { GluNode, GluObject } from "src/glunode";
+import { GluObject } from "src/glunode";
 import { nanoid } from "nanoid";
 import { accentColor } from "./theme";
 
 export default class CanvasController {
     private ctx: CanvasRenderingContext2D | null = null;
-
-    private selectNodes: Set<GluNode> = new Set();
-    private setSelectNodes: ((selectNodes: Set<GluNode>) => void) = () => {};
-    private updateScene: (() => void) = () => {};
-
+    private scene: Scene | null = null;
     private isMovingObject = false;
 
-    private scene: Scene | null = null;
+    private updateScene: () => void = () => {};
 
-    setCtx(ctx: CanvasRenderingContext2D) {
+    initialize(ctx: CanvasRenderingContext2D) {
         this.ctx = ctx;
         this.ctx.canvas.onpointerdown = this.onPointerDown.bind(this);
         this.ctx.canvas.onpointerup = this.onPointerUp.bind(this);
         this.ctx.canvas.onwheel = this.onWheel.bind(this);
-        this.resize();
+        this.onResize();
         window.requestAnimationFrame(this.render.bind(this));
         window.addEventListener("paste", this.onPaste.bind(this));
-        window.addEventListener("resize", this.resize.bind(this));
-    }
-
-    updateSelectNodes(selectNodes: Set<GluNode>) {
-        this.selectNodes = selectNodes;
+        window.addEventListener("resize", this.onResize.bind(this));
     }
 
     onSceneUpdate(handler: () => void) {
         this.updateScene = handler;
-    }
-
-    onSelectNodesUpdate(handler: (selectNodes: Set<GluNode>) => void) {
-        this.setSelectNodes = handler;
     }
 
     setScene(scene: Scene | null) {
@@ -64,7 +52,7 @@ export default class CanvasController {
             -0.5 * this.ctx.canvas.height * (this.scene.zoom - 1),
         );
 
-        const objects = this.scene.rTree.search({
+        const objects = this.scene.getNodesInRect({
             minX: this.scene.viewPos.x - canvas.width / 2 / this.scene.zoom,
             minY: this.scene.viewPos.y - canvas.height / 2 / this.scene.zoom,
             maxX: this.scene.viewPos.x + canvas.width / 2 / this.scene.zoom,
@@ -72,7 +60,7 @@ export default class CanvasController {
         });
 
         if (this.isMovingObject) {
-            for (const node of this.selectNodes) {
+            for (const node of this.scene.getSelectedNodes()) {
                 if (node instanceof GluObject) {
                     objects.push(node);
                 }
@@ -86,7 +74,7 @@ export default class CanvasController {
         }
 
         const dpr = window.devicePixelRatio;
-        for (const node of this.selectNodes) {
+        for (const node of this.scene.getSelectedNodes()) {
             const x =
                 this.ctx.canvas.width / 2 - this.scene.viewPos.x + node.pos.x;
             const y =
@@ -108,7 +96,7 @@ export default class CanvasController {
         window.requestAnimationFrame(this.render.bind(this));
     }
 
-    resize() {
+    private onResize() {
         if (this.ctx) {
             const dpr = window.devicePixelRatio;
             this.ctx.canvas.width = this.ctx.canvas.offsetWidth * dpr;
@@ -129,7 +117,7 @@ export default class CanvasController {
                 this.scene.viewPos.y +
                 (e.offsetY * dpr - this.ctx!.canvas.height / 2) /
                     this.scene.zoom;
-            const objects = this.scene.rTree.search({
+            const objects = this.scene.getNodesInRect({
                 minX: x,
                 minY: y,
                 maxX: x,
@@ -139,33 +127,31 @@ export default class CanvasController {
             if (objects.length > 0) {
                 const topNode = objects[objects.length - 1];
                 if (e.shiftKey) {
-                    const newSelectNodes = new Set(this.selectNodes);
-                    if (this.selectNodes.has(topNode)) {
-                        newSelectNodes.delete(topNode);
+                    if (this.scene.isNodeSelected(topNode)) {
+                        this.scene.unselectNode(topNode);
                     } else {
-                        newSelectNodes.add(topNode);
+                        this.scene.selectNode(topNode);
                     }
-                    this.setSelectNodes(newSelectNodes);
                 } else {
-                    if (!this.selectNodes.has(topNode)) {
-                        // Update value instantly
-                        this.selectNodes = new Set([topNode]);
-                        this.setSelectNodes(this.selectNodes);
+                    if (!this.scene.isNodeSelected(topNode)) {
+                        this.scene.unselectAllNodes();
+                        this.scene.selectNode(topNode);
                     }
 
-                    for (const node of this.selectNodes) {
+                    for (const node of this.scene.getSelectedNodes()) {
                         if (node instanceof GluObject) {
-                            this.scene.rTree.remove(node);
+                            this.scene.unregisterNode(node);
                         }
                     }
                     this.isMovingObject = true;
                     this.ctx!.canvas.onpointermove = this.moveObject.bind(this);
                 }
             } else {
-                if (this.selectNodes.size > 0) {
-                    this.setSelectNodes(new Set());
+                if (this.scene.hasSelectNode()) {
+                    this.scene.unselectAllNodes();
                 }
             }
+            this.updateScene();
         } else if (e.button === 1) {
             this.ctx!.canvas.onpointermove = this.moveCanvas.bind(this);
             try {
@@ -201,7 +187,7 @@ export default class CanvasController {
         if (!this.scene) return;
 
         const dpr = window.devicePixelRatio;
-        for (const node of this.selectNodes) {
+        for (const node of this.scene.getSelectedNodes()) {
             node.pos = node.pos.offset(
                 (e.movementX * dpr) / this.scene.zoom,
                 (e.movementY * dpr) / this.scene.zoom,
@@ -217,18 +203,16 @@ export default class CanvasController {
             if (item.kind === "file") {
                 const blob = item.getAsFile();
                 if (blob) {
-                    this.scene
-                        .getRoot()
-                        .addNode(
-                            new GluObject(
-                                "image",
-                                nanoid(),
-                                "Image",
-                                this.scene.viewPos.clone(),
-                                new Dim(0, 0),
-                                blob,
-                            ),
-                        );
+                    this.scene.root.addChild(
+                        new GluObject(
+                            "image",
+                            nanoid(),
+                            "Image",
+                            this.scene.viewPos.clone(),
+                            new Dim(0, 0),
+                            blob,
+                        ),
+                    );
                     this.updateScene();
                 }
             }
@@ -240,9 +224,9 @@ export default class CanvasController {
 
         this.ctx!.canvas.onpointermove = null;
         if (e.button === 0 && this.isMovingObject) {
-            for (const node of this.selectNodes) {
+            for (const node of this.scene.getSelectedNodes()) {
                 if (node instanceof GluObject) {
-                    this.scene.rTree.insert(node);
+                    this.scene.registerNode(node);
                 }
             }
             this.updateScene();
@@ -256,7 +240,11 @@ export default class CanvasController {
         if (!this.scene) return;
 
         if (e.ctrlKey) {
-            this.scene.zoom = limit(this.scene.zoom - e.deltaY * 0.005, 0.1, 10);
+            this.scene.zoom = limit(
+                this.scene.zoom - e.deltaY * 0.005,
+                0.1,
+                10,
+            );
         } else {
             this.scene.viewPos = new Pos(
                 this.scene.viewPos.x + e.deltaX / this.scene.zoom,
