@@ -21,6 +21,7 @@ export default class CanvasController {
         window.requestAnimationFrame(this.render.bind(this));
         window.addEventListener("paste", this.onPaste.bind(this));
         window.addEventListener("resize", this.onResize.bind(this));
+        window.addEventListener("keydown", this.onKeydown.bind(this))
     }
 
     onSceneUpdate(handler: () => void) {
@@ -253,5 +254,15 @@ export default class CanvasController {
         }
 
         this.updateScene();
+    }
+
+    private onKeydown(e: KeyboardEvent) {
+        if (e.key === "Backspace" || e.key === "Delete") {
+            if (!this.scene) return;
+            for (const node of this.scene.getSelectedNodes()) {
+                node.getParent()?.removeChild(node);
+            }
+            this.scene.unselectAllNodes();
+        }
     }
 }

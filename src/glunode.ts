@@ -4,7 +4,7 @@ import { Scene } from "./scene";
 
 export abstract class GluNode {
     private scene: Scene | null = null;
-    private parent: GluGroup | null | undefined = undefined;
+    private parent: GluGroup | null = null;
 
     constructor(
         public type: string,
@@ -149,6 +149,12 @@ export class GluGroup extends GluNode {
         this.children.push(node);
         node.setParent(this);
         this.getScene()!.registerNode(node);
+    }
+
+    removeChild(node: GluNode) {
+        const index = this.children.indexOf(node);
+        this.children.splice(index, 1);
+        this.getScene()!.unregisterNode(node);
     }
 
     async writeToDataBuffer(dataBuffer: DataBuffer): Promise<void> {
