@@ -1,20 +1,23 @@
 import { contextBridge, ipcRenderer } from "electron";
+import type { IElectronAPI } from "src/interface";
 
-contextBridge.exposeInMainWorld("electronAPI", {
-    removeAllListeners: (channel: string) =>
-        ipcRenderer.removeAllListeners(channel),
+const api: IElectronAPI = {
+    removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
     quit: () => ipcRenderer.send("quit"),
     openSettings: () => ipcRenderer.send("open-settings"),
     newScene: () => ipcRenderer.send("new-scene"),
     openScene: () => ipcRenderer.send("open-scene"),
-    onOpenScene: (callback: (filePath: string) => void) =>
+    onOpenScene: (callback) =>
         ipcRenderer.on("open-scene", (_event, value) => callback(value)),
-    onSaveScene: (callback: () => void) =>
-        ipcRenderer.on("save-scene", () => callback()),
-    onCloseScene: (callback: () => void) =>
-        ipcRenderer.on("close-scene", () => callback()),
-    saveFile: (filePath: string, data: Uint8Array) =>
+    onSaveScene: (callback) => ipcRenderer.on("save-scene", () => callback()),
+    onCloseScene: (callback) => ipcRenderer.on("close-scene", () => callback()),
+    saveFile: (filePath, data) =>
         ipcRenderer.invoke("save-file", filePath, data),
-    readFile: (filePath: string) => ipcRenderer.invoke("read-file", filePath),
+    readFile: (filePath) => ipcRenderer.invoke("read-file", filePath),
     getAccentColor: () => ipcRenderer.invoke("get-accent-color"),
-});
+    onSaveWindowState: (callback) => ipcRenderer.on("save-window-state", callback),
+    saveFilePaths: (filePaths) =>
+        ipcRenderer.send("save-file-paths", filePaths),
+};
+
+contextBridge.exposeInMainWorld("electronAPI", api);

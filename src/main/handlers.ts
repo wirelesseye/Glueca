@@ -1,6 +1,5 @@
 import {
     BrowserWindow,
-    IpcMainEvent,
     WebContents,
     app,
     dialog,
@@ -61,7 +60,7 @@ export function closeScene(target: WebContents) {
 }
 
 export function toggleAlwaysOnTop(window: BrowserWindow) {
-    window.setAlwaysOnTop(!window.isAlwaysOnTop(), "floating");
+    window.setAlwaysOnTop(!window.isAlwaysOnTop(), "pop-up-menu");
 }
 
 export function toggleVisibleOnAllWorkspaces(window: BrowserWindow) {
@@ -75,11 +74,13 @@ export function registerIPCHandlers() {
 
     ipcMain.on("open-settings", windows.createSettingsWindow);
 
-    ipcMain.on("new-scene", async (event) => newScene(event.sender));
+    ipcMain.on("new-scene", (event) => newScene(event.sender));
 
-    ipcMain.on("open-scene", async (event: IpcMainEvent) =>
-        openScene(event.sender),
-    );
+    ipcMain.on("open-scene", (event) => openScene(event.sender));
+
+    ipcMain.on("ready-to-close", (event) => {
+        event.sender.close();
+    });
 
     ipcMain.handle(
         "save-file",

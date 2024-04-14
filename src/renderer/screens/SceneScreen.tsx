@@ -1,7 +1,5 @@
-import Background from "@/components/Background";
 import CanvasView from "@/components/CanvasView";
 import CustomTitleBar from "@/components/CustomTitleBar";
-import ThemeContainer from "@/components/ThemeContainer";
 import { Button } from "@/components/ui/button";
 import {
     DropdownMenu,
@@ -19,8 +17,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Dim } from "src/coordinate";
 import { Scene } from "src/scene";
-import { useDarkTheme } from "@/lib/theme";
-import { cn } from "@/lib/utils";
 import {
     EllipsisIcon,
     ImportIcon,
@@ -39,8 +35,6 @@ import Layers from "@/components/Layers";
 import { useForceUpdate } from "@/lib/hooks";
 
 export default function SceneScreen() {
-    const dark = useDarkTheme();
-
     const [filePath, setFilePath] = useState("");
     const [scenes, setScenes] = useState<Record<string, Scene | null>>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -48,6 +42,8 @@ export default function SceneScreen() {
     const fileInput = useRef<HTMLInputElement>(null);
     const [showInfo, setShowInfo] = useState(false);
     const [showLayers, setShowLayers] = useState(false);
+
+    const canClose = useRef(false);
 
     const updateScene = useForceUpdate();
 
@@ -92,10 +88,9 @@ export default function SceneScreen() {
 
     const saveScene = useCallback(() => {
         if (scene) {
-            const promise = (async () => {
-                const data = await scene.serialize();
-                await window.electronAPI.saveFile(filePath, data);
-            })();
+            const promise = scene
+                .serialize()
+                .then((data) => window.electronAPI.saveFile(filePath, data));
             toast.promise(promise, {
                 loading: "Saving…",
                 success: "Saved",
@@ -144,6 +139,42 @@ export default function SceneScreen() {
         };
     }, [closeScene]);
 
+    useEffect(() => {
+        window.electronAPI.onSaveWindowState(() => {
+            window.electronAPI.saveFilePaths(Object.keys(scenes));
+        });
+        return () => {
+            window.electronAPI.removeAllListeners("save-window-state");
+        };
+    }, [scenes]);
+
+    useEffect(() => {
+        window.onbeforeunload = (event) => {
+            if (!canClose.current) {
+                event.returnValue = false;
+                Promise.all(
+                    Object.keys(scenes).map((filePath) => {
+                        const scene = scenes[filePath];
+                        return scene
+                            ? scene
+                                  .serialize()
+                                  .then((data) =>
+                                      window.electronAPI.saveFile(
+                                          filePath,
+                                          data,
+                                      ),
+                                  )
+                            : Promise.resolve();
+                    }),
+                ).then(() => {
+                    canClose.current = true;
+                    window.close();
+                });
+                toast.loading("Saving...");
+            }
+        };
+    }, [scenes]);
+
     const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const file = e.target.files[0];
@@ -168,8 +199,7 @@ export default function SceneScreen() {
     };
 
     return (
-        <ThemeContainer dark={dark} className="flex h-full flex-col">
-            <Background background="transparent" />
+        <div className="flex h-full flex-col">
             <CustomTitleBar className="gap-3">
                 <SceneTabs
                     scenes={scenes}
@@ -241,7 +271,7 @@ export default function SceneScreen() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent
                             collisionPadding={10}
-                            className={cn("min-w-40", { dark })}
+                            className="min-w-40"
                         >
                             <DropdownMenuItem onClick={newScene}>
                                 New Scene
@@ -294,7 +324,7 @@ export default function SceneScreen() {
             ) : (
                 <Welcome newScene={newScene} openScene={openScene} />
             )}
-        </ThemeContainer>
+        </div>
     );
 }
 

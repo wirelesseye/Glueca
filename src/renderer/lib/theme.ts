@@ -37,7 +37,7 @@ window.electronAPI.getAccentColor().then((hex) => {
     const root = document.querySelector(":root") as HTMLElement;
 
     const color = chroma(hex);
-    const darkenColor = color.darken(0.2);
+    const darkenColor = color.desaturate(0.4).darken(0.4);
 
     accentColor = hex;
     accentDarkenColor = darkenColor.hex();
@@ -46,8 +46,17 @@ window.electronAPI.getAccentColor().then((hex) => {
     const darkenHsl = darkenColor.hsl();
     const ringHsl = color.desaturate(2).hsl();
 
-    root.style.setProperty("--accent", `${hsl[0]} ${hsl[1] * 100}% ${hsl[2] * 100}%`);
-    root.style.setProperty("--ring", `${ringHsl[0]} ${ringHsl[1] * 100}% ${ringHsl[2] * 100}%`);
-    root.style.setProperty("--accent-darken", `${darkenHsl[0]} ${darkenHsl[1] * 100}% ${darkenHsl[2] * 100}%`);
+    root.style.setProperty(
+        "--accent",
+        `${hsl[0]} ${hsl[1] * 100}% ${hsl[2] * 100}%`,
+    );
+    root.style.setProperty(
+        "--ring",
+        `${ringHsl[0]} ${ringHsl[1] * 100}% ${ringHsl[2] * 100}%`,
+    );
+    root.style.setProperty(
+        "--accent-darken",
+        `${darkenHsl[0]} ${darkenHsl[1] * 100}% ${darkenHsl[2] * 100}%`,
+    );
     root.style.setProperty("--accent-foreground", "0 0% 100%");
 });

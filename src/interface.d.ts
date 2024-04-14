@@ -10,6 +10,8 @@ export interface IElectronAPI {
     saveFile: (filePath: string, data: Uint8Array) => Promise<void>;
     readFile: (filePath: string) => Promise<Uint8Array>;
     getAccentColor: () => Promise<string>;
+    onSaveWindowState: (callback: () => void) => void;
+    saveFilePaths: (filePaths: string[]) => void;
 }
 
 declare global {
