@@ -150,7 +150,7 @@ export default function SceneScreen() {
 
     useEffect(() => {
         window.onbeforeunload = (event) => {
-            if (!canClose.current) {
+            if (Object.keys(scenes).length > 0 && !canClose.current) {
                 event.returnValue = false;
                 Promise.all(
                     Object.keys(scenes).map((filePath) => {
